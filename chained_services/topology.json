@@ -1,0 +1,85 @@
+{
+    "services": {
+      "A": {
+        "image": "service-a-image:v1.0",
+        "cpu": 500,
+        "ram": 256,
+        "min_replicas": 1,
+        "max_replicas": 5,
+        "computation_throughput": 100,
+        "warning_probability": 0.01,
+        "error_probability": 0.001,
+        "degraded_probability": 0.001,
+        "failure_probability": 0.0001
+      },
+      "B": {
+        "image": "service-b-image:v1.0",
+        "cpu": 400,
+        "ram": 512,
+        "min_replicas": 1,
+        "max_replicas": 3,
+        "computation_throughput": 80,
+        "warning_probability": 0.02,
+        "error_probability": 0.002,
+        "degraded_probability": 0.002,
+        "failure_probability": 0.0002
+      },
+      "C": {
+        "image": "service-c-image:v1.0",
+        "cpu": 600,
+        "ram": 512,
+        "min_replicas": 1,
+        "max_replicas": 4,
+        "computation_throughput": 150,
+        "warning_probability": 0.01,
+        "error_probability": 0.001,
+        "degraded_probability": 0.001,
+        "failure_probability": 0.0001
+      },
+      "D": {
+        "image": "service-d-image:v1.0",
+        "cpu": 700,
+        "ram": 1024,
+        "min_replicas": 1,
+        "max_replicas": 6,
+        "computation_throughput": 300,
+        "warning_probability": 0.015,
+        "error_probability": 0.0015,
+        "degraded_probability": 0.0015,
+        "failure_probability": 0.00015
+      }
+    },
+    "connections": [
+      {
+        "source": "INPUT",
+        "destination": "A",
+        "throughput": 200
+      },
+      {
+        "source": "A",
+        "destination": "B",
+        "throughput": -1
+      },
+      {
+        "source": "A",
+        "destination": "C",
+        "throughput": -1
+      },
+      {
+        "source": "B",
+        "destination": "D",
+        "throughput": -1
+      },
+      {
+        "source": "C",
+        "destination": "D",
+        "throughput": -1
+      },
+      {
+        "source": "D",
+        "destination": "OUTPUT",
+        "throughput": -1
+      }
+    ]
+  }
+  
