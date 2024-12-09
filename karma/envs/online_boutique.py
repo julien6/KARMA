@@ -13,8 +13,8 @@ from gym import spaces
 from gym.utils import seeding
 
 # Number of Requests - Discrete Event
-from k8s_hpa.envs.deployment import get_max_cpu, get_max_mem, get_max_traffic, get_online_boutique_deployment_list
-from k8s_hpa.envs.util import save_to_csv, get_num_pods, get_cost_reward, \
+from karma.envs.deployment import get_max_cpu, get_max_mem, get_max_traffic, get_online_boutique_deployment_list
+from karma.envs.util import save_to_csv, get_num_pods, get_cost_reward, \
     get_latency_reward_online_boutique
 
 # MIN and MAX Replication

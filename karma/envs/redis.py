@@ -11,8 +11,8 @@ from gym import spaces
 from gym.utils import seeding
 from datetime import datetime
 
-from k8s_hpa.envs.deployment import get_max_cpu, get_max_mem, get_max_traffic, get_redis_deployment_list
-from k8s_hpa.envs.util import save_to_csv, get_cost_reward, get_latency_reward_redis, get_num_pods
+from karma.envs.deployment import get_max_cpu, get_max_mem, get_max_traffic, get_redis_deployment_list
+from karma.envs.util import save_to_csv, get_cost_reward, get_latency_reward_redis, get_num_pods
 
 # MIN and MAX Replication
 MIN_REPLICATION = 1

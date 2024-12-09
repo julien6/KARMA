@@ -1,6 +1,6 @@
-# k8s-hpa
+# KARMA: Kubernetes Autoscaling with Resilient Multi-Agent system 
 
-The implemented k8s-hpa is a custom [OpenAi Gym](https://gym.openai.com/) 
+The implemented KARMA is a custom [OpenAi Gym](https://gym.openai.com/) 
 environment for the training of Reinforcement Learning (RL) agents for auto-scaling research 
 in the Kubernetes (K8s) platform. 
 

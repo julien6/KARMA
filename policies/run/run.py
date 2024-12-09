@@ -6,7 +6,7 @@ from stable_baselines3 import PPO
 from stable_baselines3 import A2C
 from sb3_contrib import RecurrentPPO
 
-from k8s_hpa.envs import Redis, OnlineBoutique
+from karma.envs import Redis, OnlineBoutique
 from stable_baselines3.common.callbacks import CheckpointCallback
 
 # Logging
