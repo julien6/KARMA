@@ -1,0 +1,8 @@
+1 - Jupyter Notebook
+2 - Automatiser la création du Cluster Kubernetes
+3 - Automatiser la collecte des métriques comme un état à partir du cluster réel
+4 - Intégrer les transitions d'états dans la fonction de transition partielle exacte
+5 - Intégrer les transitions d'états dans la fonction de transition basée sur MLP
+6 - Préparer l'environnement PettingZoo avec la fonction de transition modélisée et la fonction de récompense
+7 - Lancer l'entrainement avec le modèle PettingZoo en intégrant MOISE+MARL et la convergence est conditionnée par la récompense supérieur à un seuil et l'écart-type inférieur à un seuil
+8 - Préléver les politiques entrainés et les executer avec de nouveaux états récoltés dans le cluster réel
