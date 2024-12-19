@@ -31,7 +31,7 @@ class KarmaCluster:
         required_tools = ["docker", "kind", "kubectl"]
         for tool in required_tools:
             try:
-                subprocess.run([tool, "--version"],
+                subprocess.run([tool, "--help"],
                                stdout=subprocess.PIPE, check=True)
                 print(f"{tool} is available.")
             except subprocess.CalledProcessError:
@@ -259,6 +259,7 @@ if __name__ == "__main__":
                 "kind": "Deployment",
                 "metadata": {
                     "name": service_name_lower,
+                    "namespace": self.cluster_name,
                     "labels": {"app": service_name_lower}
                 },
                 "spec": {
@@ -295,6 +296,7 @@ if __name__ == "__main__":
                 "kind": "Service",
                 "metadata": {
                     "name": service_name_lower,
+                    "namespace": self.cluster_name,
                     "labels": {"app": service_name_lower}
                 },
                 "spec": {
@@ -347,11 +349,6 @@ if __name__ == "__main__":
                     ["kubectl", "create", "namespace", self.cluster_name],
                     check=True
                 )
-            print(f"Creating namespace '{self.cluster_name}'...")
-            subprocess.run(
-                ["kubectl", "create", "namespace", self.cluster_name],
-                check=True
-            )
             print(f"Namespace '{self.cluster_name}' created successfully.")
 
             # Étape 3 : Charger les images Docker dans le cluster
@@ -405,15 +402,13 @@ if __name__ == "__main__":
 
             # Étape 6 : Vérifier les pods et services
             print("Checking cluster status...")
-            subprocess.run(["kubectl", "get", "pods"], check=True)
-            subprocess.run(["kubectl", "get", "services"], check=True)
+            subprocess.run(["kubectl", "get", "pods", "--namespace", self.cluster_name], check=True)
+            subprocess.run(["kubectl", "get", "services", "--namespace", self.cluster_name], check=True)
 
         except subprocess.CalledProcessError as e:
             print(f"Error during setup: {e}")
         except Exception as e:
             print(f"Unexpected error: {e}")
-
-        print(f"Cluster '{self.cluster_name}' created successfully.")
 
     def wait_for_pods_ready(self, timeout=300):
         """
@@ -422,7 +417,7 @@ if __name__ == "__main__":
         Args:
             timeout (int): Durée maximale d'attente en secondes (par défaut: 300).
         """
-        print("Waiting for all pods to be ready...")
+        print(f"Waiting for all pods to be ready in namespace '{self.cluster_name}'...")
         for _ in range(timeout // 5):
             result = subprocess.run(
                 ["kubectl", "get", "pods", "--namespace", self.cluster_name,
@@ -455,11 +450,11 @@ if __name__ == '__main__':
 
     try:
         kc.check_prerequisites()
-        # kc.generate_mocks()
-        # kc.build_docker_images()
-        # kc.generate_manifests()
-        # kc.create_cluster()
-        # kc.wait_for_pods_ready()
+        kc.generate_mocks()
+        kc.build_docker_images()
+        kc.generate_manifests()
+        kc.create_cluster()
+        kc.wait_for_pods_ready()
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:

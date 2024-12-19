@@ -74,6 +74,35 @@ else
   echo "Miniconda est déjà installé."
 fi
 
+# Charger Miniconda dans le script
+print_step "Chargement de Miniconda"
+source ~/miniconda/etc/profile.d/conda.sh
+
+# 6. Création et activation de l'environnement Conda
+print_step "Création de l'environnement Conda 'karma'"
+if ! conda info --envs | grep -q "karma"; then
+  conda create -n karma -y python=3.9
+  print_step "Environnement 'karma' créé avec succès"
+else
+  echo "L'environnement 'karma' existe déjà."
+fi
+
+# Activer l'environnement
+conda activate karma
+
+pip install setuptools==65.5.0 pip==21
+pip install wheel==0.38.0
+
+
+# 7. Installation des dépendances Python
+print_step "Installation des dépendances Python"
+if [ -f "requirements.txt" ]; then
+  pip install -r requirements.txt
+  print_step "Dépendances installées avec succès"
+else
+  echo "Warning: 'requirements.txt' introuvable. Aucune dépendance installée."
+fi
+
 # 6. Vérification des installations
 print_step "Vérification des outils installés"
 echo "Docker version : $(docker --version)"
@@ -81,13 +110,6 @@ echo "kubectl version : $(kubectl version --client --short)"
 echo "Kind version : $(kind --version)"
 echo "Helm version : $(helm version --short)"
 echo "Conda version : $(conda --version)"
-
-
-source ~/miniconda3/etc/profile.d/conda.sh
-conda create -n karma
-conda activate karma
-pip install -r requirements.txt
-
 
 print_step "Redémarre ton terminal ou exécute 'newgrp docker' pour utiliser Docker sans sudo."
 
