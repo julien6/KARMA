@@ -1,4 +1,3 @@
-1 - Jupyter Notebook
 2 - Automatiser la création du Cluster Kubernetes
 3 - Automatiser la collecte des métriques comme un état à partir du cluster réel
 4 - Intégrer les transitions d'états dans la fonction de transition partielle exacte
