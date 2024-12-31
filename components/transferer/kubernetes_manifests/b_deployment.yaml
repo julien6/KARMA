@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: b
+  name: b
+  namespace: karma-cluster
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: b
+  template:
+    metadata:
+      labels:
+        app: b
+    spec:
+      containers:
+      - env:
+        - name: DOWNSTREAM_SERVICES
+          value: d
+        image: b_image:latest
+        imagePullPolicy: Never
+        name: b
+        ports:
+        - containerPort: 5000
+        resources:
+          requests:
+            cpu: 400m
+            memory: 512Mi
