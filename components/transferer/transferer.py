@@ -7,6 +7,7 @@ import os
 import sqlite3
 import torch
 import torch.nn as nn
+import random
 
 from utils.cluster_util import KarmaCluster, generate_and_deploy_cluster
 from pprint import pprint
@@ -352,6 +353,8 @@ class Transferer:
                     gym_state_tensor
                 ).squeeze(0).detach().numpy()
                 gym_action = gym_action_tensor.astype(int)
+                gym_action = np.array([random.randint(0,3) for i in range(0, len(deployment_names))])
+                print(f"chosen action: {gym_action}")
 
                 # 3. Appliquer l'action
                 json_action = self.gym_action_to_json(gym_action)
@@ -521,10 +524,10 @@ if __name__ == '__main__':
         # print("\nJSON ↔ Gym Action conversion is consistent.")
 
         # Chemin de la base de données et de la politique
-        db_path = "transitions.db"
+        db_path = "../modeler/transition.db"  # "transitions.db"
         policy_dir = "policies"
         policy_name = "policy.pth"
-        policy_path = "policy.pth"
+        policy_path = None
 
         # Créer et sauvegarder une politique
         policy_path = tc.create_and_save_policy(
