@@ -7,7 +7,7 @@ set -e  # Arrêter le script si une commande échoue
 
 # Fonction pour afficher les étapes
 function print_step {
-  echo -e "\n\e[1;34m[STEP] $1\e[0m"
+    echo -e "\n\e[1;34m[STEP] $1\e[0m"
 }
 
 # Mettre à jour le système
@@ -17,61 +17,61 @@ sudo apt-get update && sudo apt-get upgrade -y
 # 1. Installation de Docker
 print_step "Installation de Docker"
 if ! [ -x "$(command -v docker)" ]; then
-  sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-  sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-  sudo apt-get update
-  sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-  sudo usermod -aG docker $USER
-  print_step "Docker installé avec succès"
+    sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    sudo apt-get update
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+    sudo usermod -aG docker $USER
+    print_step "Docker installé avec succès"
 else
-  echo "Docker est déjà installé."
+    echo "Docker est déjà installé."
 fi
 
 # 2. Installation de kubectl
 print_step "Installation de kubectl"
 if ! [ -x "$(command -v kubectl)" ]; then
-  curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-  chmod +x kubectl
-  sudo mv kubectl /usr/local/bin/kubectl
-  print_step "kubectl installé avec succès"
+    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    chmod +x kubectl
+    sudo mv kubectl /usr/local/bin/kubectl
+    print_step "kubectl installé avec succès"
 else
-  echo "kubectl est déjà installé."
+    echo "kubectl est déjà installé."
 fi
 
 # 3. Installation de Kind
 print_step "Installation de Kind"
 if ! [ -x "$(command -v kind)" ]; then
-  curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
-  chmod +x ./kind
-  sudo mv ./kind /usr/local/bin/kind
-  print_step "Kind installé avec succès"
+    curl -Lo ./kind https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+    chmod +x ./kind
+    sudo mv ./kind /usr/local/bin/kind
+    print_step "Kind installé avec succès"
 else
-  echo "Kind est déjà installé."
+    echo "Kind est déjà installé."
 fi
 
 # 4. Installation de Helm
 print_step "Installation de Helm"
 if ! [ -x "$(command -v helm)" ]; then
-  curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-  print_step "Helm installé avec succès"
+    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    print_step "Helm installé avec succès"
 else
-  echo "Helm est déjà installé."
+    echo "Helm est déjà installé."
 fi
 
 # 5. Installation de Miniconda
 print_step "Installation de Miniconda"
 if ! [ -d "$HOME/miniconda" ]; then
-  curl -o Miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-  chmod +x Miniconda.sh
-  ./Miniconda.sh -b -p $HOME/miniconda
-  rm Miniconda.sh
-  export PATH="$HOME/miniconda/bin:$PATH"
-  echo 'export PATH="$HOME/miniconda/bin:$PATH"' >> ~/.bashrc
-  source ~/.bashrc
-  print_step "Miniconda installé avec succès"
+    curl -o Miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    chmod +x Miniconda.sh
+    ./Miniconda.sh -b -p $HOME/miniconda
+    rm Miniconda.sh
+    export PATH="$HOME/miniconda/bin:$PATH"
+    echo 'export PATH="$HOME/miniconda/bin:$PATH"' >> ~/.bashrc
+    source ~/.bashrc
+    print_step "Miniconda installé avec succès"
 else
-  echo "Miniconda est déjà installé."
+    echo "Miniconda est déjà installé."
 fi
 
 # Charger Miniconda dans le script
@@ -81,26 +81,26 @@ source ~/miniconda/etc/profile.d/conda.sh
 # 6. Création et activation de l'environnement Conda
 print_step "Création de l'environnement Conda 'karma'"
 if ! conda info --envs | grep -q "karma"; then
-  conda create -n karma -y python=3.9
-  print_step "Environnement 'karma' créé avec succès"
+    conda create -n karma -y python=3.10
+    print_step "Environnement 'karma' créé avec succès"
 else
-  echo "L'environnement 'karma' existe déjà."
+    echo "L'environnement 'karma' existe déjà."
 fi
 
 # Activer l'environnement
 conda activate karma
 
-pip install setuptools==65.5.0 pip==21
-pip install wheel==0.38.0
-
-
 # 7. Installation des dépendances Python
 print_step "Installation des dépendances Python"
 if [ -f "requirements.txt" ]; then
-  pip install -r requirements.txt
-  print_step "Dépendances installées avec succès"
+    pip install --upgrade pip
+    pip install setuptools==65.5.0 pip==21
+    pip install wheel==0.38.0
+    
+    pip install -r requirements.txt
+    print_step "Dépendances installées avec succès"
 else
-  echo "Warning: 'requirements.txt' introuvable. Aucune dépendance installée."
+    echo "Warning: 'requirements.txt' introuvable. Aucune dépendance installée."
 fi
 
 # 6. Vérification des installations

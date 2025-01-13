@@ -6,6 +6,7 @@ import requests
 import os
 import sqlite3
 import torch
+import torch.nn as nn
 
 from utils.cluster_util import KarmaCluster, generate_and_deploy_cluster
 from pprint import pprint
@@ -331,12 +332,6 @@ class Transferer:
     def execute_policy_loop(self, db_path, policy_path, interval=5):
         """
         Exécute une boucle infinie pour collecter des transitions (s, a, s') en utilisant une politique donnée.
-
-        Args:
-            db_path (str): Chemin vers la base de données SQLite.
-            policy_path (str): Chemin vers le fichier .pth contenant la politique.
-            transferer (Transferer): Instance de la classe Transferer pour interagir avec le cluster.
-            interval (int): Temps entre chaque itération en secondes.
         """
         policy = torch.load(policy_path, map_location=torch.device('cpu'))
         policy.eval()
@@ -349,11 +344,13 @@ class Transferer:
                 raw_state = self.get_state_from_prometheus()
                 gym_state = self.json_to_gym_state(raw_state)
 
-                # 2. Obtenir l'action depuis la politique
+                # 2. Aplatir l'état et obtenir l'action depuis la politique
                 gym_state_tensor = torch.tensor(
-                    gym_state, dtype=torch.float32).unsqueeze(0)
+                    gym_state.flatten(), dtype=torch.float32
+                ).unsqueeze(0)
                 gym_action_tensor = policy(
-                    gym_state_tensor).squeeze(0).detach().numpy()
+                    gym_state_tensor
+                ).squeeze(0).detach().numpy()
                 gym_action = gym_action_tensor.astype(int)
 
                 # 3. Appliquer l'action
@@ -409,40 +406,13 @@ class Transferer:
         print(f"Policy process started with PID {process.pid}.")
         return process
 
-
-import torch
-import torch.nn as nn
-import os
-
-class SimplePolicy(nn.Module):
-    def __init__(self, state_dim, action_dim, hidden_dim=128):
-        super(SimplePolicy, self).__init__()
-        self.model = nn.Sequential(
-            nn.Linear(state_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, action_dim),
-            nn.Tanh()  # Pour obtenir des actions dans une plage relative
-        )
-
-    def forward(self, state):
-        return self.model(state)
-
     def create_and_save_policy(self, save_dir="policies", policy_name="policy.pth", hidden_dim=128):
         """
         Crée une politique simple en utilisant la topologie et l'enregistre au format .pth.
-
-        Args:
-            save_dir (str): Répertoire où enregistrer la politique.
-            policy_name (str): Nom du fichier de la politique.
-            hidden_dim (int): Dimension des couches cachées du réseau.
-
-        Returns:
-            str: Chemin complet vers le fichier enregistré.
         """
-        # Déterminer les dimensions des états et des actions à partir de la topologie
-        state_dim = len(self.topology["services"]) * len(self.topology["metrics"])
+        # Déterminer les dimensions des états et des actions
+        state_dim = len(self.topology["services"]) * \
+            len(self.topology["metrics"])
         action_dim = len(self.topology["services"])
 
         # Créer le modèle de politique
@@ -459,6 +429,33 @@ class SimplePolicy(nn.Module):
         print(f"Policy saved at {policy_path}")
 
         return policy_path
+
+
+class SimplePolicy(nn.Module):
+    def __init__(self, state_dim, action_dim, hidden_dim=128):
+        super(SimplePolicy, self).__init__()
+        self.model = nn.Sequential(
+            nn.Linear(state_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, action_dim),
+            nn.Tanh()  # Pour obtenir des actions dans une plage relative
+        )
+        self.init_weights()  # Initialiser les poids
+
+    def init_weights(self):
+        """
+        Initialise les poids des couches linéaires avec une distribution uniforme.
+        """
+        for layer in self.model:
+            if isinstance(layer, nn.Linear):
+                # Xavier Uniform Initialization
+                nn.init.xavier_uniform_(layer.weight)
+                nn.init.zeros_(layer.bias)  # Initialiser les biais à zéro
+
+    def forward(self, state):
+        return self.model(state)
 
 
 if __name__ == '__main__':
@@ -523,10 +520,18 @@ if __name__ == '__main__':
         # assert json_action == reconstructed_json_action, "Mismatch between original and reconstructed JSON action!"
         # print("\nJSON ↔ Gym Action conversion is consistent.")
 
+        # Chemin de la base de données et de la politique
         db_path = "transitions.db"
+        policy_dir = "policies"
+        policy_name = "policy.pth"
         policy_path = "policy.pth"
 
-        process = tc.initialize_and_execute_policy(db_path, policy_path, interval=5)
+        # Créer et sauvegarder une politique
+        policy_path = tc.create_and_save_policy(
+            save_dir=policy_dir, policy_name=policy_name)
+
+        process = tc.initialize_and_execute_policy(
+            db_path, policy_path, interval=5)
 
         print("Press Ctrl+C to stop the policy process.")
         try:
