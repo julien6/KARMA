@@ -1,30 +1,23 @@
 import numpy as np
-import os
-import torch
-
 from pettingzoo.utils.env import ParallelEnv
 from gymnasium import spaces
 # Assurez-vous que le Modeler est disponible et bien importé
 from modeler import Modeler
-from marllib.envs.pettingzoo import PettingZooEnvWrapper
-from marllib import marl
+
 
 class Trainer:
-    def __init__(self, modeler: Modeler, reward_function, algo_name="ppo"):
+    def __init__(self, modeler: Modeler, reward_function):
         """
         Initialisation du composant Trainer.
 
         Args:
             modeler (Modeler): Instance du composant Modeler pour prédire les transitions d'état.
             reward_function (callable): Fonction de récompense globale qui calcule la récompense à partir d'un état et d'une action.
-            algo_name (str): Nom de l'algorithme MARLlib à utiliser (par défaut : "ppo").
         """
         self.modeler = modeler
         self.reward_function = reward_function
         self.env = None  # Environnement PettingZoo, créé dynamiquement
         self.agents = self._initialize_agents()  # Liste des noms d'agents
-        self.algo_name = algo_name
-        self.marl_algorithm = None  # Algorithme MARLlib configuré
 
     def _initialize_agents(self):
         """
@@ -135,131 +128,62 @@ class Trainer:
             self.create_pettingzoo_env()
         return self.env
 
-    def configure_marl_algorithm(self, env):
-        """
-        Configure l'algorithme MARLlib avec l'environnement donné.
-
-        Args:
-            env (PettingZooEnvWrapper): Environnement PettingZooWrapper pour MARLlib.
-        """
-        algo = marl(self.algo_name)
-        model_config = {
-            "core_arch": "mlp",  # Architecture pour le modèle
-            "encoder": "mlp",    # Type d'encodeur
-        }
-
-        self.marl_algorithm = algo(env, model_config)
-        print(f"Algorithme {self.algo_name} configuré avec succès.")
-
-    def train_agents(self, train_episodes=1000, test_episodes=100, reward_threshold=100.0, std_threshold=10.0):
-        """
-        Entraîne les agents en utilisant MARLlib jusqu'à atteindre les conditions de convergence.
-
-        Args:
-            train_episodes (int): Nombre d'épisodes d'entraînement.
-            test_episodes (int): Nombre d'épisodes de test pour évaluer la convergence.
-            reward_threshold (float): Seuil de récompense moyenne pour arrêter l'entraînement.
-            std_threshold (float): Seuil de l'écart-type de la récompense pour arrêter l'entraînement.
-        """
-        if self.env is None:
-            self.create_pettingzoo_env()
-
-        # Envelopper l'environnement avec PettingZooWrapper de MARLlib
-        wrapped_env = PettingZooEnvWrapper(self.env)
-
-        # Configurer l'algorithme MARLlib
-        self.configure_marl_algorithm(wrapped_env)
-
-        print("Début de l'entraînement...")
-        results = self.marl_algorithm.train(
-            train_episodes=train_episodes, test_episodes=test_episodes, reward_threshold=reward_threshold, std_threshold=std_threshold
-        )
-
-        # Sauvegarder les politiques entraînées
-        policies_dir = "./trained_policies"
-        os.makedirs(policies_dir, exist_ok=True)
-        for agent, policy in results["policies"].items():
-            policy_path = os.path.join(policies_dir, f"{agent}_policy.pth")
-            torch.save(policy, policy_path)
-            print(f"Politique de {agent} sauvegardée à : {policy_path}")
-
-        print("Entraînement terminé.")
-
 
 if __name__ == '__main__':
 
-    from modeler import Modeler, create_and_populate_database
+    # Fonction de récompense globale pour le test
+    def test_reward_function(state, action, next_state):
+        """
+        Calcule une récompense simplifiée pour le test.
 
-    # Configuration de base
-    DB_NAME = "transitions.db"
-    TOPOLOGY_PATH = "./topology.json"  # Fichier JSON avec les informations sur le cluster
-    MODEL_PATH = "mlp_model.pth"
-    NUM_TRANSITIONS = 5000  # Nombre de transitions générées
-    NUM_SERVICES = 4        # Nombre de services
-    NUM_METRICS = 5         # Nombre de métriques par service
+        Args:
+            state (np.ndarray): État actuel.
+            action (np.ndarray): Action prise.
+            next_state (np.ndarray): État suivant.
 
-    # Création et peuplement de la base de données
-    if not os.path.exists(DB_NAME):
-        print("Création et peuplement de la base de données...")
-        create_and_populate_database(
-            db_name=DB_NAME,
-            num_transitions=NUM_TRANSITIONS,
-            num_services=NUM_SERVICES,
-            num_metrics=NUM_METRICS
-        )
+        Returns:
+            float: Récompense calculée.
+        """
+        # Exemple : récompense basée sur la réduction de la différence entre les métriques
+        return -np.sum(np.abs(next_state - state))
 
-    # Instanciation du Modeler
-    modeler = Modeler(db_path=DB_NAME, topology_path=TOPOLOGY_PATH, model_path=MODEL_PATH)
+    print("=" * 20)
+    print("trainer_test.py")
+    print("=" * 20)
 
-    # Création de l'environnement PettingZoo
-    class SimpleClusterEnv:
-        def __init__(self, modeler):
-            self.modeler = modeler
-            self.num_services = modeler.num_services
-            self.num_metrics = modeler.num_metrics
-            self.observation_space = marl.env.observation_space(
-                shape=(self.num_services, self.num_metrics), low=0, high=1
-            )
-            self.action_space = marl.env.action_space(
-                shape=(self.num_services,), low=-5, high=5
-            )
+    # 1. Configurer le Modeler
+    print("Initialisation du Modeler...")
+    db_name = "../modeler/transitions.db"
+    topology_path = "../../utils/install_topology.json"
+    modeler = Modeler(db_path=db_name, topology_path=topology_path)
 
-        def reset(self):
-            # Générer un état initial aléatoire
-            self.state = np.random.rand(self.num_services, self.num_metrics)
-            return self.state
+    # 2. Créer le Trainer
+    print("Initialisation du Trainer...")
+    trainer = Trainer(modeler=modeler, reward_function=test_reward_function)
 
-        def step(self, actions):
-            try:
-                # Prédire l'état suivant avec le Modeler
-                next_state = self.modeler.predict_next_state(self.state, actions)
-            except ValueError:
-                print("Transition inconnue, état aléatoire généré.")
-                next_state = np.random.rand(self.num_services, self.num_metrics)
+    # 3. Créer l'environnement PettingZoo
+    print("Création de l'environnement PettingZoo...")
+    trainer.create_pettingzoo_env()
+    env = trainer.get_env()
 
-            # Calcul de la récompense (par exemple, minimiser une métrique)
-            reward = -np.sum(next_state)
+    # 4. Tester les fonctions de base de l'environnement
+    print("Test du reset()...")
+    observations = env.reset()
+    print("Observations initiales :", observations)
 
-            # Déterminer si l'épisode est terminé
-            done = np.random.random() < 0.05  # Probabilité fixe pour terminer l'épisode
+    print("Test du step()...")
+    actions = {agent: np.random.randint(-5, 6, size=(1,))
+               for agent in env.agents}
+    print("Actions prises :", actions)
 
-            self.state = next_state
-            return next_state, reward, done, {}
+    observations, rewards, terminations, truncations, infos = env.step(actions)
+    print("Observations après step :", observations)
+    print("Récompenses :", rewards)
+    print("Terminations :", terminations)
+    print("Infos :", infos)
 
-    # Instanciation de l'environnement
-    env = SimpleClusterEnv(modeler)
+    print("=== TEST TERMINÉ ===")
 
-    # Configuration de MARLlib
-    algo_name = "ppo"  # Algorithme choisi parmi ceux supportés par MARLlib
-    team = marl.make_env(environment=env)
-    model = marl.build_model(team, algo_name)
-    algo = marl.build_algo(model=model, algo_name=algo_name)
 
-    # Entraînement des agents
-    print("Entraînement des agents MARL en cours...")
-    algo.fit(env=env, total_timesteps=10000)
-
-    # Sauvegarde des politiques entraînées
-    policy_path = "trained_policy.pth"
-    algo.save(policy_path)
-    print(f"Politique entraînée sauvegardée à : {policy_path}")
+if __name__ == "__main__":
+    main()
