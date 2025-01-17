@@ -103,7 +103,20 @@ else
     echo "Warning: 'requirements.txt' introuvable. Aucune dépendance installée."
 fi
 
-# 6. Vérification des installations
+# 8. Installation de RLlib et MARLlib
+print_step "Installation de RLlib et MARLlib"
+
+# Installer Ray (RLlib en fait partie)
+pip install ray[rllib] torch torchvision
+
+# Installer MARLlib
+pip install marllib
+
+print_step "RLlib et MARLlib installés avec succès"
+
+
+
+# 9. Vérification des installations
 print_step "Vérification des outils installés"
 echo "Docker version : $(docker --version)"
 echo "kubectl version : $(kubectl version --client --short)"
