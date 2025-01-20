@@ -431,7 +431,7 @@ def create_and_populate_database(db_name="transitions.db", num_transitions=10000
         for _ in range(num_transitions):
             state = np.random.rand(num_services, num_metrics).tolist()
             # Actions entre -5 et +5
-            action = np.random.randint(-5, 6, size=(num_services,)).tolist()
+            action = np.random.randint(0, 5, size=(num_services,)).tolist()
             next_state = (np.array(state) +
                           np.random.rand(num_services, num_metrics)).tolist()
 

@@ -78,10 +78,10 @@ fi
 print_step "Chargement de Miniconda"
 source ~/miniconda/etc/profile.d/conda.sh
 
-# 6. Création et activation de l'environnement Conda
+# 6. Création et activation de l'environnement Conda avec Python 3.8
 print_step "Création de l'environnement Conda 'karma'"
 if ! conda info --envs | grep -q "karma"; then
-    conda create -n karma -y python=3.10
+    conda create -n karma -y python=3.8
     print_step "Environnement 'karma' créé avec succès"
 else
     echo "L'environnement 'karma' existe déjà."
@@ -90,31 +90,33 @@ fi
 # Activer l'environnement
 conda activate karma
 
-# 7. Installation des dépendances Python
+# 7. Installation de MARLlib et patchs
+print_step "Installation de MARLlib et application des patchs"
+git clone https://github.com/Replicable-MARL/MARLlib.git
+cd MARLlib
+pip install "pip==21.0"
+pip install "gym>=0.20.0,<0.22.0"
+pip install click
+pip install gymnasium
+pip install -r requirements.txt --timeout 216000
+pip install ray
+pip install -e .
+python marllib/patch/add_patch.py -y
+cd ..
+print_step "MARLlib installé avec succès"
+
+# 8. Installation des dépendances Python
 print_step "Installation des dépendances Python"
 if [ -f "requirements.txt" ]; then
-    pip install --upgrade pip
+    pip install protobuf==3.20.* # Pour éviter un bug lors de l'éxécution
     pip install setuptools==65.5.0 pip==21
     pip install wheel==0.38.0
-    
-    pip install -r requirements.txt
+    pip install -r requirements.txt --timeout 216000
+    pip uninstall numpy ; pip install numpy==1.23.5
     print_step "Dépendances installées avec succès"
 else
     echo "Warning: 'requirements.txt' introuvable. Aucune dépendance installée."
 fi
-
-# 8. Installation de RLlib et MARLlib
-print_step "Installation de RLlib et MARLlib"
-
-# Installer Ray (RLlib en fait partie)
-pip install ray[rllib] torch torchvision
-
-# Installer MARLlib
-pip install marllib
-
-print_step "RLlib et MARLlib installés avec succès"
-
-
 
 # 9. Vérification des installations
 print_step "Vérification des outils installés"
