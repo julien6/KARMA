@@ -181,9 +181,3 @@ if __name__ == '__main__':
     print("Récompenses :", rewards)
     print("Terminations :", terminations)
     print("Infos :", infos)
-
-    print("=== TEST TERMINÉ ===")
-
-
-if __name__ == "__main__":
-    main()
