@@ -1,5 +1,10 @@
 # KARMA: Kubernetes Autoscaling with Resilient Multi-Agent system 
 
+> ⚠️ **Warning: This project is a work in progress.**
+>
+> Some features may be incomplete or non-functional as development is currently ongoing. Use with caution and feel free to report any issues.
+
+
 KARMA is a framework designed to simulate and manage microservice architectures using Kubernetes clusters. It supports Multi-Agent Reinforcement Learning (MARL) with modeling, training, and deployment pipelines. KARMA is built for scalability, adaptability, and robust simulation of cluster's problems like bottlenecks, crashes, and high workloads.
 
 
